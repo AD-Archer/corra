@@ -1,0 +1,302 @@
+:root {
+    --primary: #7C3AED;
+    --primary-dark: #5B21B6;
+    --secondary: #EC4899;
+    --background: #0F172A;
+    --surface: #1E293B;
+    --surface-light: #334155;
+    --text: #F1F5F9;
+    --text-secondary: #D1D5DB;
+    --success: #10B981;
+    --error: #EF4444;
+    --gradient: linear-gradient(135deg, var(--primary), var(--secondary));
+}
+
+body {
+    background-color: var(--background);
+    color: var(--text);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+/* Cards and Containers */
+.card {
+    background-color: var(--surface);
+    border: 1px solid var(--surface-light);
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.card-body {
+    padding: 1.5rem;
+}
+
+/* Typography */
+h1 {
+    background: var(--gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: 800;
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+}
+
+h5.card-title {
+    color: var(--text);
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+}
+
+/* Form Elements */
+.form-control, .form-select {
+    background-color: var(--surface-light) !important;
+    border: 2px solid transparent !important;
+    color: var(--text) !important;
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.25) !important;
+    outline: none;
+}
+
+.form-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* Buttons */
+.btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.75rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--gradient);
+    border: none;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, var(--primary-dark), var(--secondary));
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background-color: var(--surface-light);
+    border: none;
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background-color: var(--surface);
+    color: var(--text);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-outline-primary:hover {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+/* Progress Bar */
+.progress {
+    background-color: var(--surface-light);
+    height: 0.5rem;
+    border-radius: 1rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background: var(--gradient);
+    transition: width 0.3s ease;
+}
+
+/* Analysis Section */
+#analysis-text {
+    background: var(--surface-light);
+    padding: 1.5rem;
+    border-radius: 0.75rem;
+    color: var(--text);
+    white-space: pre-line;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    border: 1px solid var(--primary);
+}
+
+#follow-up-section {
+    border-top: 1px solid var(--surface-light);
+    padding-top: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    color: var(--primary);
+    width: 3rem;
+    height: 3rem;
+}
+
+/* Multiple Choice Options */
+.question-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.option-btn {
+    background-color: var(--surface-light);
+    border: 2px solid transparent;
+    border-radius: 0.75rem;
+    padding: 1rem 1.25rem;
+    text-align: left;
+    transition: all 0.2s;
+    color: var(--text);
+    width: 100%;
+    font-size: 1rem;
+    cursor: pointer;
+}
+
+.option-btn:hover {
+    background-color: var(--surface);
+    border-color: var(--primary);
+}
+
+.option-btn.selected {
+    background-color: var(--primary);
+    border-color: var(--primary);
+    color: white;
+}
+
+.option-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.card {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .card-body {
+        padding: 1rem;
+    }
+} 
+
+/* Loading States */
+#loading-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.loading-content {
+    text-align: center;
+    background: var(--surface);
+    padding: 2rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.loading-text {
+    color: var(--text);
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+
+/* Disabled button state */
+.btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+} 
+
+/* Add these styles */
+#initialization-status {
+    animation: fadeIn 0.3s ease-out;
+}
+
+.alert-info {
+    background-color: var(--surface-light);
+    border-color: var(--primary);
+    color: var(--text);
+} 
+
+.question-text {
+    color: var(--text);
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    background-color: var(--surface-light);
+    padding: 10px;
+    border-radius: 5px;
+} 
+
+/* Input Fields */
+.question-answer {
+    background-color: var(--surface-light);
+    border: 2px solid var(--primary);
+    color: var(--text);
+    border-radius: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+/* Adjust the question text to ensure it's readable */
+.question-text {
+    color: var(--text);
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+} 
+
+/* Add this CSS rule to change the text color of the follow-up questions section */
+#follow-up-section h6 {
+    color: white; /* Change this to your desired color */
+} 

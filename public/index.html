@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Personality Analysis - Discover Your Traits</title>
+    <meta name="description" content="Analyze your personality traits with our AI-powered analysis tool. Get insights and follow-up questions to deepen your understanding.">
+    <meta name="keywords" content="AI, personality analysis, personality traits, analysis tool, follow-up questions">
+    <meta property="og:title" content="AI Personality Analysis">
+    <meta property="og:description" content="Discover your personality traits with our AI analysis tool.">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <h1 class="text-center mb-4">AI Personality Analysis</h1>
+                <div id="initialization-status" class="text-center mb-4 d-none">
+                    <div class="alert alert-info">
+                        Initializing application...
+                    </div>
+                </div>
+
+                <!-- Prompt Type Selection -->
+                <div id="prompt-selection" class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Choose Your Analysis Type</h5>
+                        <select id="prompt-type" class="form-select mb-3">
+                            <option value="">Select an analysis type...</option>
+                            <option value="PERSONALITY_ANALYSIS">Personality Analysis</option>
+                            <option value="CUSTOM">Custom Analysis</option>
+                        </select>
+                        <div id="custom-prompt-container" class="d-none">
+                            <textarea id="custom-prompt" class="form-control mb-3" rows="3" 
+                                placeholder="Enter your custom scenario prompt..."></textarea>
+                        </div>
+                        <button id="start-analysis" class="btn btn-primary" disabled>Start Analysis</button>
+                    </div>
+                </div>
+
+                <!-- Questions Section -->
+                <div id="question-container" class="card d-none">
+                    <div class="card-body">
+                        <div id="progress-container" class="mb-4">
+                            <div class="progress">
+                                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                        <div id="questions-list">
+                            <!-- Questions will be populated by JavaScript -->
+                        </div>
+                        <button id="submit-answers" class="btn btn-primary mt-3">Submit Answers</button>
+                    </div>
+                </div>
+
+                <!-- Analysis Results -->
+                <div id="analysis-container" class="card d-none">
+                    <div class="card-body">
+                        <h5 class="card-title mb-3">Your Analysis</h5>
+                        <div id="analysis-text" class="mb-4"></div>
+                        
+                        <!-- Follow-up Section -->
+                        <div id="follow-up-section" class="mb-4">
+                            <h6>Follow-up Questions (Remaining: <span id="remaining-interactions">3</span>)</h6>
+                            <textarea id="follow-up-input" class="form-control mb-2" rows="2" 
+                                placeholder="Ask a follow-up question..."></textarea>
+                            <button id="submit-follow-up" class="btn btn-secondary">Ask Question</button>
+                        </div>
+
+                        <button id="restart-btn" class="btn btn-outline-primary">Start New Analysis</button>
+                    </div>
+                </div>
+
+                <!-- Loading Spinner -->
+                <div id="loading-container" class="text-center d-none">
+                    <div class="loading-content">
+                        <div class="spinner-border text-primary mb-3" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <div class="loading-text">Generating your personality questions...</div>
+                    </div>
+                </div>
+
+                <!-- How to Use Section -->
+                <div id="how-to-use" class="mb-5">
+                    <h2 class="text-center mb-4">How to Use This Site</h2>
+                    <p>Welcome to the AI Personality Analysis tool! Follow these simple steps to get started:</p>
+                    <ol>
+                        <li>Select your desired analysis type from the dropdown menu.</li>
+                        <li>If you choose "Custom," enter your specific scenario in the provided text area.</li>
+                        <li>Click the "Start Analysis" button to begin.</li>
+                        <li>Answer the questions presented to you. You can select options or type your responses.</li>
+                        <li>Use the "Next" button to navigate through the questions, and the "Back" button to review your answers.</li>
+                        <li>Once you reach the last question, click "Submit" to receive your analysis.</li>
+                        <li>You can ask follow-up questions based on your analysis results.</li>
+                        <li>If you wish to start a new analysis, click the "Start New Analysis" button.</li>
+                    </ol>
+                    <p>If you have any questions or need assistance, feel free to reach out!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 

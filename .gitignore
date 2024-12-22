@@ -1,0 +1,27 @@
+# Ignore environment variables
+.env
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+
+# Ignore virtual environment directories
+venv/
+env/
+
+# Ignore IDE/editor specific files
+*.swp
+*.sublime-project
+*.sublime-workspace
+.idea/
+.vscode/
+
+# Ignore logs
+*.log
+
+# Ignore other common files
+.DS_Store
+Thumbs.db
+
+#Ignore node modules
+node_modules/
