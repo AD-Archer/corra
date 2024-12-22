@@ -102,6 +102,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             switch (selectedPromptType) {
                 case 'PERSONALITY_ANALYSIS':
+                case 'BANKAI_SHIKAI':
+                case 'AVATAR_ELEMENT':
+                case 'SUPER_POWER':
+                case 'PRINCESS_POWER':
                     await fetchQuestions();
                     break;
                 case 'CUSTOM':
@@ -136,101 +140,100 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             questions = data;
-            answers = new Array(questions.length).fill('');
-            currentQuestionIndex = 0;
-            displayQuestions();
+            currentQuestionIndex = 0; // Reset to the first question
+            displayQuestion(); // Display the first question
         } catch (error) {
-            console.error('Error in fetchQuestions:', error);
-            alert('Failed to load questions: ' + error.message);
+            console.error('Error fetching questions:', error);
+            alert('Failed to load questions. Please try again.');
         } finally {
             loadingContainer.classList.add('d-none');
         }
     }
 
     // Display questions
-    function displayQuestions() {
-        if (!questions[currentQuestionIndex]) {
-            console.error('No question data available for index:', currentQuestionIndex);
-            return;
-        }
+    function displayQuestion() {
+        if (currentQuestionIndex < questions.length) {
+            const questionData = questions[currentQuestionIndex];
+            questionsList.innerHTML = ''; // Clear previous questions
 
-        questionsList.innerHTML = ''; // Clear previous questions
-        const questionData = questions[currentQuestionIndex];
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'mb-4';
 
-        const questionDiv = document.createElement('div');
-        questionDiv.className = 'mb-4';
+            // Create the question text
+            const questionText = document.createElement('div');
+            questionText.className = 'question-text mb-4';
+            questionText.textContent = `${currentQuestionIndex + 1}. ${questionData.question}`;
 
-        // Create the question text
-        const questionText = document.createElement('div');
-        questionText.className = 'question-text mb-4';
-        questionText.textContent = `${currentQuestionIndex + 1}. ${questionData.question}`;
+            // Create an input field for the user's answer
+            const answerInput = document.createElement('input');
+            answerInput.type = 'text';
+            answerInput.className = 'form-control question-answer';
+            answerInput.placeholder = 'Feel free to type or edit your answer here...';
 
-        // Create an input field for the user's answer
-        const answerInput = document.createElement('input');
-        answerInput.type = 'text';
-        answerInput.className = 'form-control question-answer';
-        answerInput.placeholder = 'Feel free to type or edit your answer here...';
+            // Create the options container
+            const optionsDiv = document.createElement('div');
+            optionsDiv.className = 'question-options';
 
-        // Create the options container
-        const optionsDiv = document.createElement('div');
-        optionsDiv.className = 'question-options';
-
-        // Add each option as a button
-        questionData.options.forEach((option) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'option-btn';
-            button.textContent = option;
-            button.addEventListener('click', () => {
-                answerInput.value = option; // Set the input value to the selected option
-                nextBtn.disabled = false; // Enable the Next button when an option is selected
+            // Add each option as a button
+            questionData.options.forEach((option) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.addEventListener('click', () => {
+                    answerInput.value = option; // Set the input value to the selected option
+                    nextBtn.disabled = false; // Enable the Next button when an option is selected
+                });
+                optionsDiv.appendChild(button);
             });
-            optionsDiv.appendChild(button);
-        });
 
-        // Create navigation buttons
-        const navButtons = document.createElement('div');
-        navButtons.className = 'd-flex justify-content-between mt-4';
-        const nextBtn = document.createElement('button');
-        nextBtn.className = 'btn btn-primary';
-        nextBtn.id = 'next-btn';
-        nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Submit' : 'Next';
-        nextBtn.disabled = true; // Initially disabled
+            // Create navigation buttons
+            const navButtons = document.createElement('div');
+            navButtons.className = 'd-flex justify-content-between mt-4';
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-primary';
+            nextBtn.id = 'next-btn';
+            nextBtn.textContent = currentQuestionIndex === questions.length - 1 ? 'Submit' : 'Next';
+            nextBtn.disabled = true; // Initially disabled
 
-        nextBtn.addEventListener('click', handleNext); // Attach event listener
+            nextBtn.addEventListener('click', handleNext); // Attach event listener
 
-        navButtons.innerHTML = `
-            <button class="btn btn-secondary" id="back-btn" ${currentQuestionIndex === 0 ? 'disabled' : ''}>Back</button>
-            <button class="btn btn-secondary" id="end-early-btn">End Early</button>
-        `;
-        navButtons.appendChild(nextBtn); // Append the Next button
+            navButtons.innerHTML = `
+                <button class="btn btn-secondary" id="back-btn" ${currentQuestionIndex === 0 ? 'disabled' : ''}>Back</button>
+                <button class="btn btn-secondary" id="end-early-btn">End Early</button>
+            `;
+            navButtons.appendChild(nextBtn); // Append the Next button
 
-        // Assemble the question container
-        questionDiv.appendChild(questionText);
-        questionDiv.appendChild(answerInput); // Add the input field
-        questionDiv.appendChild(optionsDiv);
-        questionDiv.appendChild(navButtons);
-        questionsList.appendChild(questionDiv);
+            // Assemble the question container
+            questionDiv.appendChild(questionText);
+            questionDiv.appendChild(answerInput); // Add the input field
+            questionDiv.appendChild(optionsDiv);
+            questionDiv.appendChild(navButtons);
+            questionsList.appendChild(questionDiv);
 
-        // Update progress bar
-        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
-        document.getElementById('progress-bar').style.width = `${progress}%`;
+            // Update progress bar
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
 
-        // Add event listeners for navigation buttons
-        document.getElementById('back-btn').addEventListener('click', handleBack);
-        document.getElementById('end-early-btn').addEventListener('click', handleEndEarly);
+            // Add event listeners for navigation buttons
+            document.getElementById('back-btn').addEventListener('click', handleBack);
+            document.getElementById('end-early-btn').addEventListener('click', handleEndEarly);
 
-        // Enable Next button if there's an answer
-        answerInput.addEventListener('input', () => {
-            nextBtn.disabled = !answerInput.value.trim(); // Enable if there's input
-        });
+            // Enable Next button if there's an answer
+            answerInput.addEventListener('input', () => {
+                nextBtn.disabled = !answerInput.value.trim(); // Enable if there's input
+            });
+
+            // Focus on the answer input field for better user experience
+            answerInput.focus();
+        }
     }
 
     // Handle Back button
     function handleBack() {
         if (currentQuestionIndex > 0) {
             currentQuestionIndex--;
-            displayQuestions();
+            displayQuestion();
         }
     }
 
@@ -245,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         answers[currentQuestionIndex] = answerInput.value; // Save the answer
         if (currentQuestionIndex < questions.length - 1) {
             currentQuestionIndex++;
-            displayQuestions();
+            displayQuestion();
         } else {
             submitAnalysis(); // If it's the last question, submit the answers
         }
@@ -294,7 +297,39 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Initialize the application
-    initialize();
+    // Follow-up question submission
+    submitFollowUp.addEventListener('click', async () => {
+        const followUpQuestion = followUpInput.value.trim();
+        if (!followUpQuestion) {
+            alert('Please enter a follow-up question.');
+            return;
+        }
 
-})
+        try {
+            loadingContainer.classList.remove('d-none');
+            const response = await fetch('/api/follow-up', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    question: followUpQuestion,
+                    previousAnalysis: previousAnalysis, // Ensure this variable holds the previous analysis
+                    interactionCount: interactionCount
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            // Display the answer to the follow-up question in the analysis box
+            analysisText.textContent += `\nFollow-Up Answer: ${data.answer}`; // Append the follow-up answer
+            followUpInput.value = ''; // Clear the input after submission
+        } catch (error) {
+            console.error('Error submitting follow-up question:', error);
+            alert('Failed to submit follow-up question. Please try again.');
+        } finally {
+            loadingContainer.classList.add('d-none');
+        }
+    });
+
+    initialize();
+});

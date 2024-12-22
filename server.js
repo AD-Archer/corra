@@ -17,15 +17,30 @@ const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // Predefined prompt types
 const PROMPT_TYPES = {
+    BANKAI_SHIKAI: {
+        title: "Bleach Zanpakuto Analysis",
+        description: "Answer a series of questions to determine your Bankai and Shikai.",
+        systemPrompt: "You are a master Zanpakuto analyst from Bleach. Based on the user's answers, determine their Shikai and Bankai abilities, appearance, and name."
+    },
     PERSONALITY_ANALYSIS: {
         title: "Personality Analysis",
         description: "Answer a series of questions to analyze your personality.",
         systemPrompt: "You are a highly skilled personality analyst. Based on the user's answers, provide a detailed analysis of their personality."
     },
-    CUSTOM: {
-        title: "Custom Analysis",
-        description: "Create your own personality-based scenario.",
-        systemPrompt: "" // Will be provided by user
+    AVATAR_ELEMENT: {
+        title: "Avatar Element Analysis",
+        description: "Answer a series of questions to determine your Avatar element.",
+        systemPrompt: "You are a wise Avatar master. Based on the user's answers, determine which of the four elements (Water, Earth, Fire, Air) they would bend."
+    },
+    SUPER_POWER: {
+        title: "Super Power Analysis",
+        description: "Answer a series of questions to determine your super power.",
+        systemPrompt: "You are a super power analyst. Based on the user's answers, determine what super power they would possess."
+    },
+    PRINCESS_POWER: {
+        title: "Princess Power Analysis",
+        description: "Answer a series of questions to determine your princess power.",
+        systemPrompt: "You are a royal advisor. Based on the user's answers, determine what kind of princess power they would have."
     }
 };
 
@@ -46,13 +61,15 @@ async function generateQuestions(promptType, customPrompt) {
         let currentQuestion = null;
 
         for (const line of lines) {
-            if (line.match(/^\*\*\d+\.\s/)) {
-                // Start of a new question
+            // Check for question titles (e.g., **Shikai**)
+            if (line.startsWith('**')) {
+                // If we have a current question, push it to the questions array
                 if (currentQuestion) {
                     questions.push(currentQuestion);
                 }
+                // Start a new question
                 currentQuestion = {
-                    question: line.replace(/^\*\*\d+\.\s/, '').trim(),
+                    question: line.replace(/^\*\*/, '').trim(), // Remove the ** and trim
                     options: []
                 };
             } else if (currentQuestion && line.match(/^\([a-d]\)\s/)) {
@@ -61,6 +78,7 @@ async function generateQuestions(promptType, customPrompt) {
             }
         }
 
+        // Push the last question if it exists
         if (currentQuestion) {
             questions.push(currentQuestion);
         }
