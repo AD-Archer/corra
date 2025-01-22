@@ -15,7 +15,7 @@
     <div class="container mt-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <h1 class="text-center mb-4">AI Personality Analysis</h1>
+                <h1 class="text-center mb-4 gradient-title">AI Personality Analysis</h1>
                 <div id="initialization-status" class="text-center mb-4 d-none">
                     <div class="alert alert-info">
                         Initializing application...
@@ -23,34 +23,33 @@
                 </div>
 
                 <!-- Prompt Type Selection -->
-                <div id="prompt-selection" class="card mb-4">
-                    <div class="card-body">
+                <div id="prompt-selection" class="card mb-4 shadow-sm">
+                    <div class="card-body p-4">
                         <h5 class="card-title mb-3">Choose Your Analysis Type</h5>
-                        <select id="prompt-type" class="form-select mb-3">
+                        <select class="form-select mb-3" id="prompt-type">
                             <option value="">Select an analysis type...</option>
-                            <option value="PERSONALITY_ANALYSIS">Personality Analysis</option>
-                            <option value="CUSTOM">Custom Analysis</option>
                         </select>
                         <div id="custom-prompt-container" class="d-none">
                             <textarea id="custom-prompt" class="form-control mb-3" rows="3" 
                                 placeholder="Enter your custom scenario prompt..."></textarea>
                         </div>
-                        <button id="start-analysis" class="btn btn-primary" disabled>Start Analysis</button>
+                        <button class="btn btn-primary w-100" id="start-analysis" disabled>Start Analysis</button>
                     </div>
                 </div>
 
                 <!-- Questions Section -->
-                <div id="question-container" class="card d-none">
-                    <div class="card-body">
-                        <div id="progress-container" class="mb-4">
-                            <div class="progress">
-                                <div id="progress-bar" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                <div id="question-container" class="d-none">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title question-text"></h5>
+                            <div class="question-options d-flex flex-column gap-2">
+                                <!-- Options will be added dynamically -->
+                            </div>
+                            <div class="mt-4 d-flex justify-content-between">
+                                <button class="btn btn-secondary" id="prev-question" disabled>Previous</button>
+                                <button class="btn btn-primary" id="next-question">Next</button>
                             </div>
                         </div>
-                        <div id="questions-list">
-                            <!-- Questions will be populated by JavaScript -->
-                        </div>
-                        <button id="submit-answers" class="btn btn-primary mt-3">Submit Answers</button>
                     </div>
                 </div>
 
@@ -73,12 +72,12 @@
                 </div>
 
                 <!-- Loading Spinner -->
-                <div id="loading-container" class="text-center d-none">
-                    <div class="loading-content">
+                <div id="loading-container" class="loading-overlay position-fixed top-0 start-0 w-100 h-100 d-none">
+                    <div class="loading-content p-4 rounded-3 shadow-lg text-center">
                         <div class="spinner-border text-primary mb-3" role="status">
                             <span class="visually-hidden">Loading...</span>
                         </div>
-                        <div class="loading-text">Generating your personality questions...</div>
+                        <div class="loading-text">Processing your request...</div>
                     </div>
                 </div>
 
@@ -97,6 +96,11 @@
                         <li>If you wish to start a new analysis, click the "Start New Analysis" button.</li>
                     </ol>
                     <p>If you have any questions or need assistance, feel free to reach out!</p>
+                </div>
+
+                <!-- Update the options buttons -->
+                <div class="question-options d-flex flex-column gap-2">
+                    <!-- Options will be added by JavaScript -->
                 </div>
             </div>
         </div>
