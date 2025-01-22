@@ -94,6 +94,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (nextButton) {
             nextButton.addEventListener('click', handleNextQuestion);
         }
+
+        // Restart button
+        if (restartBtn) {
+            restartBtn.addEventListener('click', handleRestart);
+        }
+
+        // Follow-up question submission
+        if (submitFollowUp) {
+            submitFollowUp.addEventListener('click', handleFollowUpSubmission);
+        }
     }
 
     function updateStartButton() {
@@ -252,6 +262,80 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error('Error fetching questions:', error);
             throw error;
+        }
+    }
+
+    function handleRestart() {
+        // Reset state
+        questions = [];
+        answers = [];
+        currentQuestionIndex = 0;
+        previousAnalysis = '';
+        
+        // Reset UI
+        questionContainer.classList.add('d-none');
+        analysisContainer.classList.add('d-none');
+        howToUseSection.classList.remove('d-none');
+        
+        // Reset form
+        promptTypeSelect.value = '';
+        if (customPromptInput) {
+            customPromptInput.value = '';
+        }
+        customPromptContainer.classList.add('d-none');
+        startAnalysisBtn.disabled = true;
+    }
+
+    async function handleFollowUpSubmission() {
+        const question = followUpInput.value.trim();
+        
+        if (!question) {
+            alert('Please enter a follow-up question.');
+            return;
+        }
+
+        try {
+            setLoading(true);
+            
+            const response = await fetch('/api/follow-up', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    question,
+                    previousAnalysis,
+                    interactionCount
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to get follow-up response');
+            }
+
+            const result = await response.json();
+            
+            // Update the analysis text with the follow-up response
+            analysisText.textContent += '\n\nFollow-up Question:\n' + question + '\n\nResponse:\n' + result.answer;
+            
+            // Update remaining interactions
+            interactionCount++;
+            remainingInteractions.textContent = result.remainingInteractions;
+            
+            // Clear the input
+            followUpInput.value = '';
+            
+            // Disable follow-up if no more interactions left
+            if (result.remainingInteractions <= 0) {
+                followUpInput.disabled = true;
+                submitFollowUp.disabled = true;
+            }
+
+        } catch (error) {
+            console.error('Error submitting follow-up:', error);
+            alert('Failed to get follow-up response. Please try again.');
+        } finally {
+            setLoading(false);
         }
     }
 

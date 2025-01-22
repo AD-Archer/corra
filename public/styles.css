@@ -354,20 +354,52 @@ body {
 
 /* Analysis Container */
 #analysis-text {
+    background-color: var(--surface-light) !important;
+    color: var(--text) !important;
+    padding: 1.5rem;
+    border-radius: 1rem;
     white-space: pre-wrap;
-    line-height: 1.6;
-    background-color: #f8f9fa;
-    padding: 1rem;
-    border-radius: 5px;
-    border: 1px solid #dee2e6;
+    line-height: 1.8;
+    font-size: 1.1rem;
+    font-family: monospace;
+    margin-bottom: 2rem;
 }
 
 /* Follow-up Section */
+#follow-up-section {
+    background-color: var(--surface) !important;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+}
+
+#follow-up-section h6 {
+    color: var(--text) !important;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
 #follow-up-input {
-    resize: vertical;
     background-color: var(--surface-light) !important;
     color: var(--text) !important;
-    border: 1px solid var(--surface-light);
+    border: none !important;
+    border-radius: 1rem;
+    padding: 1rem;
+    font-size: 1rem;
+    margin-bottom: 1rem;
+    resize: vertical;
+    min-height: 100px;
+}
+
+/* Start New Analysis Button */
+#restart-btn {
+    background-color: var(--surface-light) !important;
+    color: var(--text) !important;
+    border: none !important;
+    border-radius: 1rem;
+    padding: 1rem;
+    font-size: 1.1rem;
+    width: 100%;
 }
 
 /* Responsive Adjustments */
