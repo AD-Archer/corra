@@ -1,12 +1,13 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import dotenv from 'dotenv';
+dotenv.config();
 
-// Get API key from environment
-const apiKey = process.env.GOOGLE_API_KEY;
-if (!apiKey) {
-    throw new Error('GOOGLE_API_KEY is not set in environment variables');
+if (!process.env.GOOGLE_API_KEY) {
+    console.error('GOOGLE_API_KEY environment variable is missing');
+    process.exit(1);
 }
 
-const genAI = new GoogleGenerativeAI(apiKey);
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
 // Add better error handling for API calls

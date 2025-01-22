@@ -7,7 +7,12 @@ import { handleFollowUp } from '../controllers/followUpController.js';
 const router = express.Router();
 
 router.get('/prompt-types', (req, res) => {
-    res.json(PROMPT_TYPES);
+    try {
+        res.json(PROMPT_TYPES);
+    } catch (error) {
+        console.error('Error fetching prompt types:', error);
+        res.status(500).json({ error: 'Failed to fetch prompt types' });
+    }
 });
 
 router.get('/questions', getQuestions);

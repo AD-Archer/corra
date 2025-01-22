@@ -51,9 +51,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch prompt types
     async function fetchPromptTypes() {
-        const response = await fetch('/api/prompt-types');
-        const data = await response.json();
-        populatePromptTypes(data);
+        try {
+            const response = await fetch('/api/prompt-types');
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            populatePromptTypes(data);
+        } catch (error) {
+            console.error('Error fetching prompt types:', error);
+            throw new Error('Failed to load analysis types. Please refresh the page.');
+        }
     }
 
     // Populate prompt type select

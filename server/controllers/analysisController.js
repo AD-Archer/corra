@@ -7,10 +7,10 @@ export async function analyzeAnswers(req, res) {
     try {
         let systemPrompt = promptType === 'CUSTOM' 
             ? customPrompt 
-            : PROMPT_TYPES[promptType].systemPrompt;
+            : PROMPT_TYPES[promptType]?.systemPrompt;
 
-        if (promptType === 'CUSTOM' && !customPrompt) {
-            return res.status(400).json({ error: 'Custom prompt is required for custom quiz type' });
+        if (!systemPrompt) {
+            return res.status(400).json({ error: 'Invalid prompt type or missing custom prompt' });
         }
 
         const result = await aiService.generateAnalysis(systemPrompt, answers, interactionCount);
@@ -18,9 +18,8 @@ export async function analyzeAnswers(req, res) {
     } catch (error) {
         console.error("Error generating analysis:", error);
         res.status(500).json({ 
-            error: error.message,
-            remainingInteractions: 3 - interactionCount,
-            success: false
+            error: error.message || 'Failed to analyze answers',
+            details: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });
     }
 } 
