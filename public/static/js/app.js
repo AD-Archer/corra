@@ -122,7 +122,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function handleStartAnalysis() {
         const promptType = promptTypeSelect.value;
-        if (!promptType) return;
+        if (!promptType) {
+            alert('Please select an analysis type first');
+            return;
+        }
 
         try {
             setLoading(true);
@@ -130,6 +133,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const customPrompt = promptType === 'CUSTOM' ? customPromptInput.value.trim() : '';
             questions = await fetchQuestions(promptType, customPrompt);
+            
+            // Hide prompt selection after successful question fetch
+            document.getElementById('prompt-selection').classList.add('d-none');
             
             // Reset state
             currentQuestionIndex = 0;
@@ -142,7 +148,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
         } catch (error) {
             console.error('Error starting analysis:', error);
-            alert('Failed to load questions. Please try again.');
+            alert(error.message || 'Failed to load questions. Please try again.');
         } finally {
             setLoading(false);
         }
@@ -281,6 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
         previousAnalysis = '';
         
         // Reset UI
+        document.getElementById('prompt-selection').classList.remove('d-none');
         questionContainer.classList.add('d-none');
         analysisContainer.classList.add('d-none');
         howToUseSection.classList.remove('d-none');
@@ -292,6 +299,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         customPromptContainer.classList.add('d-none');
         startAnalysisBtn.disabled = true;
+        
+        // Reset follow-up section
+        if (followUpInput) {
+            followUpInput.value = '';
+        }
     }
 
     async function handleFollowUpSubmission() {
