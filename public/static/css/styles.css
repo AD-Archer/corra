@@ -360,9 +360,40 @@ body {
     border-radius: 1rem;
     white-space: pre-wrap;
     line-height: 1.8;
-    font-size: 1.1rem;
-    font-family: monospace;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     margin-bottom: 2rem;
+}
+
+#analysis-text h2 {
+    color: var(--primary);
+    font-size: 1.4rem;
+    margin-top: 1.5rem;
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+#analysis-text p {
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+#analysis-text ul {
+    list-style-type: none;
+    padding-left: 1rem;
+    margin-bottom: 1rem;
+}
+
+#analysis-text li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+#analysis-text li:before {
+    content: "•";
+    color: var(--primary);
+    position: absolute;
+    left: 0;
 }
 
 /* Follow-up Section */

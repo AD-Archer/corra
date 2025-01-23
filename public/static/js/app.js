@@ -261,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Update UI
             questionContainer.classList.add('d-none');
             analysisContainer.classList.remove('d-none');
-            analysisText.textContent = result.analysis;
+            analysisText.innerHTML = result.analysis;
             remainingInteractions.textContent = result.remainingInteractions;
 
         } catch (error) {

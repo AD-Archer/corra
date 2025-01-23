@@ -29,9 +29,9 @@ export async function generateQuestions(prompt) {
             throw new Error('Please select an analysis type first');
         }
 
-        const formattingPrompt = `You are a personality analysis expert. Based on this context: "${prompt}"
+        const formattingPrompt = `Based on this context: "${prompt}"
 
-Generate exactly 10 multiple choice questions that reveal personality traits. Format each question exactly like this, with no deviations:
+You must generate exactly 10 multiple choice questions. Each question must follow this exact format:
 
 1. If you discovered a close friend was living a double life, what would be your first reaction?
 a) Confront them immediately to understand their reasons
@@ -39,24 +39,21 @@ b) Quietly gather more information before deciding what to do
 c) Distance yourself to protect your own well-being
 d) Support them while encouraging honesty
 
-2. In a crisis situation, how do you typically respond?
-a) Take immediate charge and direct others
-b) Stay calm and analyze the situation methodically
-c) Focus on supporting and comforting others
-d) Adapt quickly and find innovative solutions
+2. In a parallel universe where you could choose your own superpower, which would align most with your personality?
+a) The ability to feel and heal others' emotional pain
+b) The power to see all possible outcomes before making decisions
+c) The capability to understand and speak all languages
+d) The power to turn back time to fix past mistakes
 
-IMPORTANT FORMATTING RULES:
-1. Generate exactly 10 questions
-2. Each question must start with a number and period (1., 2., etc.)
-3. Each question must have exactly 4 options
-4. Options must be labeled a) b) c) d) with lowercase letters
-5. Put one blank line between questions
-6. No special characters or formatting
-7. No explanatory text or additional content
+STRICT REQUIREMENTS:
+- Generate EXACTLY 10 questions
+- Each question MUST be numbered (1-10)
+- Each question MUST have EXACTLY 4 options labeled a) b) c) d)
+- One blank line between questions
+- No additional text or explanations
+- No markdown formatting
 
-Begin generating the 10 questions now:
-
-`;
+Begin your response with question 1 and end with question 10:`;
 
         try {
             const result = await model.generateContent({
@@ -75,18 +72,20 @@ Begin generating the 10 questions now:
 
             const response = result.response.text().trim();
             
-            // Validate response format before parsing
-            if (!response.match(/1\./)) {
-                console.error('Invalid response format:', response);
-                throw new Error('Generated response is not properly formatted. Please try again.');
+            // Pre-validate the response format
+            const questionCount = (response.match(/^\d+\./gm) || []).length;
+            if (questionCount !== 10) {
+                console.error(`Generated ${questionCount} questions instead of 10`);
+                throw new Error('Incorrect number of questions generated. Please try again.');
             }
 
             const questions = parseQuestions(response);
-
-            // Additional validation
-            if (!questions || questions.length !== 10) {
-                console.error(`Generated ${questions?.length || 0} questions instead of 10`);
-                throw new Error('Incorrect number of questions generated. Please try again.');
+            
+            // Validate each question has exactly 4 options
+            const invalidQuestions = questions.filter(q => q.options.length !== 4);
+            if (invalidQuestions.length > 0) {
+                console.error('Questions with incorrect number of options:', invalidQuestions);
+                throw new Error('Some questions have an incorrect number of options. Please try again.');
             }
 
             return questions;
@@ -104,20 +103,40 @@ export async function generateAnalysis(prompt, answers, interactionCount) {
     try {
         const analysisPrompt = `${prompt}
 
-Analyze these answers and provide a clear personality analysis:
+Analyze these answers and provide a clear personality analysis.
+Format your response in a clean, readable structure using these HTML tags:
 
-${answers.join("\n")}
+<h2>Core Traits</h2>
+- First trait
+- Second trait
+- Third trait
 
-Structure the response as:
-1. Core Traits
-2. Decision-Making Style
-3. Key Strengths
-4. Growth Areas
+<h2>Decision-Making Style</h2>
+- Point one
+- Point two
+- Point three
 
-Keep the response clear and avoid special formatting.`;
+<h2>Key Strengths</h2>
+- Strength one
+- Strength two
+- Strength three
+
+<h2>Growth Areas</h2>
+- Area one
+- Area two
+
+Use HTML tags for headers (<h2>) and dashes (-) for bullet points.
+Keep the formatting consistent and clean.`;
 
         const result = await model.generateContent(analysisPrompt);
-        const analysis = result.response.text().trim();
+        const analysis = result.response.text()
+            .trim()
+            // Convert any remaining markdown to HTML
+            .replace(/\*\*/g, '')  // Remove bold
+            .replace(/\*/g, '')    // Remove italics
+            .replace(/#{2}\s/g, '<h2>') // Convert ## to <h2>
+            .replace(/\n(?=<h2>)/g, '</h2>\n') // Close h2 tags
+            .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>'); // Wrap other text in p tags
         
         return {
             analysis,
@@ -127,7 +146,7 @@ Keep the response clear and avoid special formatting.`;
     } catch (error) {
         console.error("Error generating analysis:", error);
         if (error.message.includes('Internal Server Error')) {
-            throw new Error('Service temporarily unavailable. Please try again in a moment.');
+            throw new Error('Service temporarily unavailable. Please try again.');
         }
         throw new Error("Failed to generate analysis. Please try again.");
     }
