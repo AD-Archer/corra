@@ -167,30 +167,43 @@ export async function generateAnalysis(prompt, answers, interactionCount) {
         try {
             const analysisPrompt = `${prompt}
 
-Based on these answers, create an engaging analysis:
-${answers.join("\n")}
+Based on these answers, create a detailed analysis. Use single line breaks and proper HTML formatting:
 
-Create a personality analysis with these sections:
 <h2>Core Traits</h2>
-(Key personality traits with examples)
+<p>Detailed description of their core personality traits.</p>
 
 <h2>Decision-Making Style</h2>
-(How they approach challenges)
+<p>Analysis of how they approach challenges and make decisions.</p>
 
 <h2>Key Strengths</h2>
-(Their unique abilities and qualities)
+<p>Description of their unique abilities and qualities.</p>
 
 <h2>Growth Areas</h2>
-(Potential areas for development)
+<p>Constructive suggestions for personal development.</p>
 
-For themed analyses (like Power Rangers, Pokemon, Bleach, etc.):
-- Use theme-specific terms and references
-- Connect traits to themed elements
-- Include relevant lore
-- Be creative and descriptive
-- Make specific character connections
+For themed analyses (Bleach, etc.), include:
 
-Keep HTML formatting but be creative with content.`;
+<h2>Shikai</h2>
+<p>Name: [Name]</p>
+<p>Appearance: [Description]</p>
+<p>Abilities:</p>
+<ul>
+<li>[First ability]</li>
+<li>[Second ability]</li>
+<li>[Third ability]</li>
+</ul>
+
+<h2>Bankai</h2>
+<p>Name: [Name]</p>
+<p>Appearance: [Description]</p>
+<p>Abilities:</p>
+<ul>
+<li>[First ability]</li>
+<li>[Second ability]</li>
+<li>[Third ability]</li>
+</ul>
+
+Use single line breaks between sections and maintain HTML structure.`;
 
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: analysisPrompt }]}],
@@ -208,30 +221,23 @@ Keep HTML formatting but be creative with content.`;
 
             const analysis = result.response.text().trim();
             
-            // Validate the analysis has minimum required content
-            if (!analysis || analysis.length < 100) {
+            // Format the analysis to ensure proper spacing
+            const formattedAnalysis = analysis
+                .replace(/\n{2,}/g, '\n')   // Replace multiple line breaks with single
+                .replace(/\s+/g, ' ')       // Replace multiple spaces with single
+                .replace(/<\/h2>\s*/g, '</h2>')  // Remove space after headers
+                .replace(/<\/p>\s*/g, '</p>')    // Remove space after paragraphs
+                .replace(/<\/ul>\s*/g, '</ul>')  // Remove space after lists
+                .replace(/\*\*/g, '')
+                .replace(/\*/g, '')
+                .trim();
+
+            // Validate content
+            if (!formattedAnalysis || formattedAnalysis.length < 100) {
                 console.log(`Attempt ${attempts + 1}: Analysis too short`);
                 attempts++;
                 continue;
             }
-
-            // Check for required sections
-            if (!analysis.includes('<h2>Core Traits</h2>') || 
-                !analysis.includes('<h2>Decision-Making Style</h2>') ||
-                !analysis.includes('<h2>Key Strengths</h2>') ||
-                !analysis.includes('<h2>Growth Areas</h2>')) {
-                console.log(`Attempt ${attempts + 1}: Missing required sections`);
-                attempts++;
-                continue;
-            }
-
-            // Format the analysis
-            const formattedAnalysis = analysis
-                .replace(/\*\*/g, '')
-                .replace(/\*/g, '')
-                .replace(/#{2}\s/g, '<h2>')
-                .replace(/\n(?=<h2>)/g, '</h2>\n')
-                .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>');
 
             return {
                 analysis: formattedAnalysis,
@@ -241,17 +247,11 @@ Keep HTML formatting but be creative with content.`;
 
         } catch (error) {
             console.error(`Analysis attempt ${attempts + 1} failed:`, error);
-            
             if (attempts >= maxAttempts - 1) {
-                if (error.message.includes('Internal Server Error')) {
-                    throw new Error('Service temporarily unavailable. Please wait a moment and try again.');
-                }
-                throw new Error('Failed to generate analysis after multiple attempts. Please try again.');
+                throw new Error('Failed to generate analysis. Please try again.');
             }
-            
-            // Add a small delay before retrying
-            await new Promise(resolve => setTimeout(resolve, 1000));
             attempts++;
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
 
