@@ -20,12 +20,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const remainingInteractions = document.getElementById('remaining-interactions');
     const restartBtn = document.getElementById('restart-btn');
     const howToUseSection = document.getElementById('how-to-use');
+    const siteDescription = document.getElementById('site-description');
+    const hideDescriptionBtn = document.getElementById('hide-description');
 
     function initializeUI() {
         if (startAnalysisBtn) startAnalysisBtn.disabled = true;
         if (customPromptContainer) customPromptContainer.classList.add('d-none');
         if (questionContainer) questionContainer.classList.add('d-none');
         if (howToUseSection) howToUseSection.classList.remove('d-none');
+        
+        // Check if user has seen the description before
+        const hasSeenDescription = localStorage.getItem('hasSeenCorraDescription');
+        if (hasSeenDescription && siteDescription) {
+            siteDescription.classList.add('d-none');
+        }
+
+        // Auto-hide description after 10 seconds if user hasn't dismissed it
+        if (!hasSeenDescription && siteDescription) {
+            setTimeout(() => {
+                fadeOutDescription();
+            }, 10000); // 10 seconds
+        }
     }
 
     function setLoading(isLoading) {
@@ -124,6 +139,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (exitButtonAnalysis) {
             exitButtonAnalysis.addEventListener('click', handleExit);
+        }
+
+        // Add description hide button listener
+        if (hideDescriptionBtn) {
+            hideDescriptionBtn.addEventListener('click', fadeOutDescription);
         }
     }
 
@@ -456,6 +476,16 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleExit() {
         if (confirm('Are you sure you want to exit? All progress will be lost.')) {
             window.location.reload();
+        }
+    }
+
+    function fadeOutDescription() {
+        if (siteDescription && !siteDescription.classList.contains('d-none')) {
+            siteDescription.classList.add('fade-out');
+            setTimeout(() => {
+                siteDescription.classList.add('d-none');
+                localStorage.setItem('hasSeenCorraDescription', 'true');
+            }, 500);
         }
     }
 
