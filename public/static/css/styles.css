@@ -518,4 +518,70 @@ body {
 /* Update the navigation buttons container */
 .mt-4.d-flex {
     gap: 1rem;
+}
+
+/* Custom Response Styling */
+.custom-response-container {
+    margin-top: 1rem;
+    background-color: var(--surface-light);
+    border-radius: 0.75rem;
+    padding: 1rem;
+    display: none;
+}
+
+.custom-response-container.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+.custom-response-info {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+}
+
+.custom-response-input {
+    width: 100%;
+    background-color: var(--surface);
+    border: 1px solid var(--primary);
+    border-radius: 0.5rem;
+    color: var(--text);
+    padding: 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    min-height: 100px;
+    resize: vertical;
+    transition: border-color 0.2s ease;
+}
+
+.custom-response-input:focus {
+    outline: none;
+    border-color: var(--secondary);
+    box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.1);
+}
+
+.custom-response-input::placeholder {
+    color: var(--text-secondary);
+    opacity: 0.7;
+}
+
+/* Update option button styling */
+.option-btn.custom-option {
+    border: 2px dashed var(--primary) !important;
+    background-color: transparent !important;
+}
+
+.option-btn.custom-option:hover {
+    background-color: rgba(124, 58, 237, 0.1) !important;
+}
+
+.option-btn.custom-option.selected {
+    background-color: var(--primary) !important;
+    border-style: solid !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 } 

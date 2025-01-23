@@ -167,43 +167,111 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function displayCurrentQuestion() {
-        if (!questions.length) return;
+        if (!questions[currentQuestionIndex]) return;
 
-        const question = questions[currentQuestionIndex];
-        const questionText = questionContainer.querySelector('.question-text');
-        const optionsContainer = questionContainer.querySelector('.question-options');
-        const prevButton = document.getElementById('prev-question');
-        const nextButton = document.getElementById('next-question');
+        const questionText = document.querySelector('.question-text');
+        const optionsContainer = document.querySelector('.question-options');
         
-        // Update question text
-        questionText.textContent = question.question;
-        
-        // Clear and rebuild options
+        questionText.textContent = `${currentQuestionIndex + 1}. ${questions[currentQuestionIndex].question}`;
         optionsContainer.innerHTML = '';
-        question.options.forEach((option, index) => {
+
+        // Add regular options
+        questions[currentQuestionIndex].options.forEach((option, index) => {
             const button = document.createElement('button');
             button.className = 'btn option-btn';
+            button.textContent = `${String.fromCharCode(97 + index)}) ${option}`;
+            button.addEventListener('click', () => handleOptionSelect(option));
             if (answers[currentQuestionIndex] === option) {
                 button.classList.add('selected');
             }
-            button.textContent = option;
-            button.addEventListener('click', () => selectOption(index));
             optionsContainer.appendChild(button);
         });
 
-        // Update navigation buttons
-        prevButton.disabled = currentQuestionIndex === 0;
-        nextButton.textContent = currentQuestionIndex === questions.length - 1 ? 'Submit' : 'Next';
+        // Add custom response option
+        const customButton = document.createElement('button');
+        customButton.className = 'btn option-btn custom-option';
+        customButton.textContent = 'Write your own response...';
+        customButton.addEventListener('click', toggleCustomResponse);
+        optionsContainer.appendChild(customButton);
+
+        // Add custom response container
+        const customContainer = document.createElement('div');
+        customContainer.className = 'custom-response-container';
+        customContainer.innerHTML = `
+            <p class="custom-response-info">Share your unique perspective! Your custom response helps create a more accurate personality analysis.</p>
+            <textarea 
+                class="custom-response-input" 
+                placeholder="Enter your custom response here..."
+                maxlength="500"
+            ></textarea>
+        `;
+        optionsContainer.appendChild(customContainer);
+
+        // Restore custom response if it exists
+        const customResponse = answers[currentQuestionIndex];
+        if (customResponse && !questions[currentQuestionIndex].options.includes(customResponse)) {
+            customContainer.classList.add('active');
+            customContainer.querySelector('textarea').value = customResponse;
+            customButton.classList.add('selected');
+        }
+
+        updateNavigationButtons();
     }
 
-    function selectOption(optionIndex) {
-        answers[currentQuestionIndex] = questions[currentQuestionIndex].options[optionIndex];
+    function toggleCustomResponse(event) {
+        const button = event.target;
+        const container = button.parentElement.querySelector('.custom-response-container');
+        const textarea = container.querySelector('textarea');
+        const allOptions = document.querySelectorAll('.option-btn');
         
-        // Update UI to show selected option
-        const optionButtons = questionContainer.querySelectorAll('.option-btn');
-        optionButtons.forEach((button, index) => {
-            button.classList.toggle('selected', index === optionIndex);
-        });
+        allOptions.forEach(opt => opt.classList.remove('selected'));
+        button.classList.add('selected');
+        container.classList.add('active');
+        textarea.focus();
+
+        // Add input handler for custom response
+        textarea.oninput = (e) => {
+            const sanitizedValue = sanitizeInput(e.target.value);
+            answers[currentQuestionIndex] = sanitizedValue;
+            e.target.value = sanitizedValue;
+        };
+    }
+
+    function sanitizeInput(input) {
+        // Allow spaces and normal text input while preventing harmful content
+        return input
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/javascript:|data:/gi, '') // Remove potential script/data URIs
+            .replace(/[^\w\s.,!?'"()\-:;@#$%&*+=\s]/g, '') // Note the \s at both ends
+            .replace(/\s{2,}/g, ' ') // Replace multiple spaces with single space
+            .slice(0, 500); // Limit length
+    }
+
+    // Update handleOptionSelect to handle custom responses
+    function handleOptionSelect(option) {
+        const customContainer = document.querySelector('.custom-response-container');
+        if (customContainer) {
+            customContainer.classList.remove('active');
+        }
+        
+        const allOptions = document.querySelectorAll('.option-btn');
+        allOptions.forEach(btn => btn.classList.remove('selected'));
+        
+        const selectedButton = Array.from(document.querySelectorAll('.option-btn'))
+            .find(btn => btn.textContent.includes(option));
+        if (selectedButton) {
+            selectedButton.classList.add('selected');
+        }
+        
+        answers[currentQuestionIndex] = option;
+    }
+
+    function updateNavigationButtons() {
+        const prevButton = document.getElementById('prev-question');
+        const nextButton = document.getElementById('next-question');
+        
+        prevButton.disabled = currentQuestionIndex === 0;
+        nextButton.textContent = currentQuestionIndex === questions.length - 1 ? 'Submit' : 'Next';
     }
 
     function handlePrevQuestion() {
