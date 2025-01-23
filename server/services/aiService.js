@@ -43,86 +43,135 @@ export async function generateQuestions(prompt) {
             throw new Error('Please select an analysis type first');
         }
 
-        const formattingPrompt = `You are analyzing personality traits based on this context: "${prompt}"
+        // Add specific themes based on prompt type
+        const themeSpecificPrompts = {
+            BANKAI_SHIKAI: `You are a mysterious and ancient Zanpakuto spirit evaluating a potential Soul Reaper.
+Generate deeply personal and unsettling questions that probe into their:
+- Hidden darkness and inner demons
+- Deepest fears and secret desires
+- Moral boundaries and breaking points
+- Relationship with death and power
+- Willingness to sacrifice
+- Personal trauma and growth
+- Connection to their inner world
+- Understanding of true strength
+Make each question feel like it's coming from an ancient spirit testing their worth.`,
 
-YOUR TASK: Generate exactly 10 multiple choice questions. No more, no less.
+            AVATAR_ELEMENT: `You are an enigmatic spirit from the Spirit World, testing potential benders.
+Focus questions on their:
+- Connection to natural forces
+- Understanding of balance and chaos
+- Relationship with spiritual energy
+- Personal struggles with control
+- Inner harmony vs discord`,
 
-Here's an example of the required format:
-1. In a critical moment of battle, you discover a powerful but dangerous technique. What do you do?
-a) Master it secretly to protect others
-b) Share the knowledge with trusted allies
-c) Seal it away as too dangerous
-d) Study it carefully to understand its limits
+            SUPER_POWER: `You are a cosmic entity evaluating potential power wielders.
+Create questions that explore:
+- Their deepest motivations
+- Personal cost of power
+- Moral limits
+- Hidden potential
+- Dark temptations`,
 
-Required question types (use all of these):
-1. Moral/ethical choices
-2. Personal preferences
-3. Emotional reactions
-4. Problem-solving
-5. Social interactions
-6. Leadership style
-7. Creative thinking
-8. Life priorities
-9. Risk assessment
-10. Conflict handling
+            PERSONALITY_ANALYSIS: `You are an omniscient observer who can see into the depths of human nature.
+Create questions that reveal:
+- Unconscious patterns
+- Shadow aspects
+- Hidden motivations
+- Suppressed desires
+- True nature behind social masks`
+        };
 
-FORMAT RULES:
-- Start each question with a number (1-10)
-- Each question MUST have exactly 4 options (a,b,c,d)
-- Put one blank line between questions
-- No extra text or explanations
+        const basePrompt = `${themeSpecificPrompts[prompt] || 'You are analyzing personality traits.'}\n\n`;
 
-START YOUR RESPONSE WITH QUESTION 1 AND END WITH QUESTION 10.`;
+        const formattingPrompt = `${basePrompt}
+You must generate EXACTLY 10 questions. Each question must have EXACTLY 4 options.
+
+STRICT FORMAT REQUIRED:
+1. [Question text]
+a) [Option text]
+b) [Option text]
+c) [Option text]
+d) [Option text]
+
+2. [Question text]
+a) [Option text]
+b) [Option text]
+c) [Option text]
+d) [Option text]
+
+[Continue this exact pattern for all 10 questions]
+
+Required themes (use at least 6):
+- Moral choices with no clear right answer
+- Confronting personal darkness
+- Sacrifice vs. preservation
+- Power and its corruption
+- Hidden desires and fears
+- Inner conflict and duality
+- Personal trauma and growth
+- Control vs. chaos
+- Truth vs. deception
+- Life, death, and rebirth
+
+CRITICAL RULES:
+1. MUST generate exactly 10 numbered questions
+2. MUST have exactly 4 options (a,b,c,d) for each question
+3. Make questions psychologically deep and unsettling
+4. Each option must be distinct and revealing
+5. Maintain exact formatting
+6. Use single line break between questions
+7. No additional text or explanations
+
+Example question:
+1. In the depths of your nightmares, what form does your power take?
+a) A consuming darkness that threatens to devour everything
+b) A beautiful corruption that promises forbidden knowledge
+c) An uncontrollable force that both creates and destroys
+d) A perfect reflection of my deepest fears turned into strength
+
+BEGIN WITH QUESTION 1 AND END WITH QUESTION 10.`;
 
         let attempts = 0;
         const maxAttempts = 3;
 
         while (attempts < maxAttempts) {
             try {
+                // Add delay between retries
+                if (attempts > 0) {
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+
                 const result = await model.generateContent({
                     contents: [{ role: 'user', parts: [{ text: formattingPrompt }]}],
                     generationConfig: {
                         temperature: 0.9,
                         topK: 40,
-                        topP: 0.9,
+                        topP: 0.95,
                         maxOutputTokens: 2048,
                     }
                 });
 
-                if (!result || !result.response) {
-                    throw new Error('Failed to generate questions');
+                if (!result?.response?.text) {
+                    throw new Error('Empty response received');
                 }
 
                 const response = result.response.text().trim();
                 
-                // Pre-validate the response
-                const questionCount = (response.match(/^\d+\./gm) || []).length;
-                if (questionCount !== 10) {
-                    console.log(`Attempt ${attempts + 1}: Generated ${questionCount} questions instead of 10`);
-                    attempts++;
-                    continue;
-                }
-
+                // Strict validation
                 const questions = parseQuestions(response);
                 
-                // Validate question count and options
+                // Validate exact count
                 if (questions.length !== 10) {
-                    console.log(`Attempt ${attempts + 1}: Parsed ${questions.length} valid questions`);
+                    console.log(`Attempt ${attempts + 1}: Got ${questions.length} questions, retrying...`);
                     attempts++;
                     continue;
                 }
 
+                // Validate each question has exactly 4 options
                 const invalidQuestions = questions.filter(q => q.options.length !== 4);
                 if (invalidQuestions.length > 0) {
-                    console.log(`Attempt ${attempts + 1}: Found questions with wrong number of options`);
-                    attempts++;
-                    continue;
-                }
-
-                // Check diversity less strictly
-                const diversity = checkQuestionDiversity(questions);
-                if (!diversity.diverse) {
-                    console.log(`Attempt ${attempts + 1}: ${diversity.reason}`);
+                    console.log(`Attempt ${attempts + 1}: Some questions have wrong number of options, retrying...`);
                     attempts++;
                     continue;
                 }
@@ -131,14 +180,15 @@ START YOUR RESPONSE WITH QUESTION 1 AND END WITH QUESTION 10.`;
 
             } catch (error) {
                 console.error(`Attempt ${attempts + 1} failed:`, error);
-                if (attempts >= maxAttempts - 1) {
-                    throw new Error('Failed to generate valid questions after multiple attempts');
-                }
                 attempts++;
+                
+                if (attempts >= maxAttempts) {
+                    throw new Error('Failed to generate valid questions. Please try again.');
+                }
             }
         }
 
-        throw new Error('Unable to generate valid questions. Please try again.');
+        throw new Error('Unable to generate valid questions after multiple attempts.');
     });
 }
 
@@ -371,45 +421,41 @@ Guidelines:
     }
 }
 
+// Update parseQuestions function to be more strict
 function parseQuestions(rawText) {
     try {
         const questions = [];
-        const questionBlocks = rawText.split('\n\n').filter(block => block.trim());
+        const questionBlocks = rawText.split(/\n(?=\d+\.)/).filter(block => block.trim());
         
         for (const block of questionBlocks) {
             const lines = block.split('\n').map(line => line.trim());
-            const questionMatch = lines[0].match(/^\d+\.\s*(.+)/);
+            const questionMatch = lines[0].match(/^(\d+)\.\s*(.+)/);
             
             if (questionMatch) {
+                const questionNumber = parseInt(questionMatch[1]);
                 const questionObj = {
-                    question: questionMatch[1].trim(),
+                    question: questionMatch[2].trim(),
                     options: []
                 };
                 
-                // Collect all options for this question
-                for (const line of lines.slice(1)) {
-                    const optionMatch = line.match(/^[a-d]\)\s+(.+)/);
+                // Collect options
+                const options = lines.slice(1).filter(line => /^[a-d]\)/.test(line));
+                options.forEach(option => {
+                    const optionMatch = option.match(/^[a-d]\)\s*(.+)/);
                     if (optionMatch) {
                         questionObj.options.push(optionMatch[1].trim());
                     }
-                }
+                });
                 
-                // Only add complete questions
                 if (questionObj.options.length === 4) {
                     questions.push(questionObj);
-                } else {
-                    console.error('Invalid options count for question:', questionObj);
                 }
             }
-        }
-
-        if (questions.length === 0) {
-            throw new Error('No valid questions were generated. Please try again.');
         }
 
         return questions;
     } catch (error) {
         console.error('Error parsing questions:', error);
-        throw new Error('Failed to parse generated questions. Please try again.');
+        return [];
     }
 } 
