@@ -29,74 +29,134 @@ export async function generateQuestions(prompt) {
             throw new Error('Please select an analysis type first');
         }
 
-        const formattingPrompt = `Based on this context: "${prompt}"
+        const formattingPrompt = `You are analyzing personality traits based on this context: "${prompt}"
 
-You must generate exactly 10 multiple choice questions. Each question must follow this exact format:
+YOUR TASK: Generate exactly 10 multiple choice questions. No more, no less.
 
-1. If you discovered a close friend was living a double life, what would be your first reaction?
-a) Confront them immediately to understand their reasons
-b) Quietly gather more information before deciding what to do
-c) Distance yourself to protect your own well-being
-d) Support them while encouraging honesty
+Here's an example of the required format:
+1. In a critical moment of battle, you discover a powerful but dangerous technique. What do you do?
+a) Master it secretly to protect others
+b) Share the knowledge with trusted allies
+c) Seal it away as too dangerous
+d) Study it carefully to understand its limits
 
-2. In a parallel universe where you could choose your own superpower, which would align most with your personality?
-a) The ability to feel and heal others' emotional pain
-b) The power to see all possible outcomes before making decisions
-c) The capability to understand and speak all languages
-d) The power to turn back time to fix past mistakes
+Required question types (use all of these):
+1. Moral/ethical choices
+2. Personal preferences
+3. Emotional reactions
+4. Problem-solving
+5. Social interactions
+6. Leadership style
+7. Creative thinking
+8. Life priorities
+9. Risk assessment
+10. Conflict handling
 
-STRICT REQUIREMENTS:
-- Generate EXACTLY 10 questions
-- Each question MUST be numbered (1-10)
-- Each question MUST have EXACTLY 4 options labeled a) b) c) d)
-- One blank line between questions
-- No additional text or explanations
-- No markdown formatting
+FORMAT RULES:
+- Start each question with a number (1-10)
+- Each question MUST have exactly 4 options (a,b,c,d)
+- Put one blank line between questions
+- No extra text or explanations
 
-Begin your response with question 1 and end with question 10:`;
+START YOUR RESPONSE WITH QUESTION 1 AND END WITH QUESTION 10.`;
 
-        try {
-            const result = await model.generateContent({
-                contents: [{ role: 'user', parts: [{ text: formattingPrompt }]}],
-                generationConfig: {
-                    temperature: 0.7,
-                    topK: 40,
-                    topP: 0.8,
-                    maxOutputTokens: 2048,
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            try {
+                const result = await model.generateContent({
+                    contents: [{ role: 'user', parts: [{ text: formattingPrompt }]}],
+                    generationConfig: {
+                        temperature: 0.9,
+                        topK: 40,
+                        topP: 0.9,
+                        maxOutputTokens: 2048,
+                    }
+                });
+
+                if (!result || !result.response) {
+                    throw new Error('Failed to generate questions');
                 }
-            });
 
-            if (!result || !result.response) {
-                throw new Error('Failed to generate questions. Please try again.');
-            }
+                const response = result.response.text().trim();
+                
+                // Pre-validate the response
+                const questionCount = (response.match(/^\d+\./gm) || []).length;
+                if (questionCount !== 10) {
+                    console.log(`Attempt ${attempts + 1}: Generated ${questionCount} questions instead of 10`);
+                    attempts++;
+                    continue;
+                }
 
-            const response = result.response.text().trim();
-            
-            // Pre-validate the response format
-            const questionCount = (response.match(/^\d+\./gm) || []).length;
-            if (questionCount !== 10) {
-                console.error(`Generated ${questionCount} questions instead of 10`);
-                throw new Error('Incorrect number of questions generated. Please try again.');
-            }
+                const questions = parseQuestions(response);
+                
+                // Validate question count and options
+                if (questions.length !== 10) {
+                    console.log(`Attempt ${attempts + 1}: Parsed ${questions.length} valid questions`);
+                    attempts++;
+                    continue;
+                }
 
-            const questions = parseQuestions(response);
-            
-            // Validate each question has exactly 4 options
-            const invalidQuestions = questions.filter(q => q.options.length !== 4);
-            if (invalidQuestions.length > 0) {
-                console.error('Questions with incorrect number of options:', invalidQuestions);
-                throw new Error('Some questions have an incorrect number of options. Please try again.');
-            }
+                const invalidQuestions = questions.filter(q => q.options.length !== 4);
+                if (invalidQuestions.length > 0) {
+                    console.log(`Attempt ${attempts + 1}: Found questions with wrong number of options`);
+                    attempts++;
+                    continue;
+                }
 
-            return questions;
-        } catch (error) {
-            console.error('Generation error:', error);
-            if (error.message.includes('Internal Server Error')) {
-                throw new Error('Service temporarily unavailable. Please try again in a moment.');
+                // Check diversity less strictly
+                const diversity = checkQuestionDiversity(questions);
+                if (!diversity.diverse) {
+                    console.log(`Attempt ${attempts + 1}: ${diversity.reason}`);
+                    attempts++;
+                    continue;
+                }
+
+                return questions;
+
+            } catch (error) {
+                console.error(`Attempt ${attempts + 1} failed:`, error);
+                if (attempts >= maxAttempts - 1) {
+                    throw new Error('Failed to generate valid questions after multiple attempts');
+                }
+                attempts++;
             }
-            throw error;
         }
+
+        throw new Error('Unable to generate valid questions. Please try again.');
     });
+}
+
+function checkQuestionDiversity(questions) {
+    // Convert questions to lowercase for comparison
+    const questionTexts = questions.map(q => q.question.toLowerCase());
+    
+    // Check for repeated significant words (excluding common words)
+    const commonWords = new Set(['what', 'when', 'how', 'why', 'would', 'your', 'you', 'are', 'the', 'and', 'but', 'for', 'this', 'that', 'with', 'from']);
+    const wordCounts = {};
+    
+    questionTexts.forEach(text => {
+        const words = text.match(/\b\w+\b/g) || [];
+        words.forEach(word => {
+            if (word.length > 3 && !commonWords.has(word)) {
+                wordCounts[word] = (wordCounts[word] || 0) + 1;
+            }
+        });
+    });
+
+    const repeatedWords = Object.entries(wordCounts)
+        .filter(([_, count]) => count > 3)  // Allow more repetition
+        .map(([word]) => word);
+
+    if (repeatedWords.length > 5) {  // Allow more repeated words
+        return {
+            diverse: false,
+            reason: `Too many repeated words: ${repeatedWords.join(', ')}`
+        };
+    }
+
+    return { diverse: true };
 }
 
 export async function generateAnalysis(prompt, answers, interactionCount) {
@@ -117,7 +177,7 @@ Based on the answers provided, create an engaging and imaginative analysis. Feel
 <h2>Growth Areas</h2>
 (Suggest potential areas for development in an encouraging way)
 
-For themed analyses (like Power Rangers, Pokemon, etc.), feel free to:
+For themed analyses (like Power Rangers, Pokemon, Bleach, etc.), feel free to:
 - Use theme-specific terminology and references
 - Draw parallels between their traits and themed elements
 - Include relevant lore or background information
