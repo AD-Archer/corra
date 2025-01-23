@@ -103,40 +103,47 @@ export async function generateAnalysis(prompt, answers, interactionCount) {
     try {
         const analysisPrompt = `${prompt}
 
-Analyze these answers and provide a clear personality analysis.
-Format your response in a clean, readable structure using these HTML tags:
+Based on the answers provided, create an engaging and imaginative analysis. Feel free to be creative while following this general structure:
 
 <h2>Core Traits</h2>
-- First trait
-- Second trait
-- Third trait
+(Describe their key personality traits with specific examples and metaphors)
 
 <h2>Decision-Making Style</h2>
-- Point one
-- Point two
-- Point three
+(Explain how they approach challenges and make choices, using relevant scenarios)
 
 <h2>Key Strengths</h2>
-- Strength one
-- Strength two
-- Strength three
+(Highlight their unique abilities and positive qualities, relating them to their chosen theme)
 
 <h2>Growth Areas</h2>
-- Area one
-- Area two
+(Suggest potential areas for development in an encouraging way)
 
-Use HTML tags for headers (<h2>) and dashes (-) for bullet points.
-Keep the formatting consistent and clean.`;
+For themed analyses (like Power Rangers, Pokemon, etc.), feel free to:
+- Use theme-specific terminology and references
+- Draw parallels between their traits and themed elements
+- Include relevant lore or background information
+- Add creative descriptions and explanations
+- Make connections to specific characters or elements from the theme
 
-        const result = await model.generateContent(analysisPrompt);
+Make it engaging and fun while keeping the HTML formatting for readability.
+${answers.join("\n")}`;
+
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: analysisPrompt }]}],
+            generationConfig: {
+                temperature: 0.9,  // Increased for more creativity
+                topK: 40,
+                topP: 0.9,
+                maxOutputTokens: 2048,
+            }
+        });
+
         const analysis = result.response.text()
             .trim()
-            // Convert any remaining markdown to HTML
-            .replace(/\*\*/g, '')  // Remove bold
-            .replace(/\*/g, '')    // Remove italics
-            .replace(/#{2}\s/g, '<h2>') // Convert ## to <h2>
-            .replace(/\n(?=<h2>)/g, '</h2>\n') // Close h2 tags
-            .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>'); // Wrap other text in p tags
+            .replace(/\*\*/g, '')
+            .replace(/\*/g, '')
+            .replace(/#{2}\s/g, '<h2>')
+            .replace(/\n(?=<h2>)/g, '</h2>\n')
+            .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>');
         
         return {
             analysis,
@@ -156,19 +163,37 @@ export async function generateFollowUp(previousAnalysis, question, interactionCo
     const followUpPrompt = `Previous Analysis:
 ${previousAnalysis}
 
-Based on the above analysis, please provide a detailed and specific answer to this follow-up question:
+Create an engaging and imaginative response to this follow-up question:
 ${question}
 
-Please format your response with these sections:
-1. Direct Answer: A clear, concise response to the question
-2. Explanation: Detailed reasoning based on the previous analysis
-3. Additional Insights: Any relevant extra information or suggestions
+Feel free to:
+- Use creative analogies and examples
+- Reference specific elements from the analysis theme
+- Add relevant details and connections
+- Be descriptive and entertaining
+- Include theme-specific terminology
 
-Keep your response focused and relevant to both the question and the original analysis.`;
+Keep your response focused on the question while maintaining the fun and engaging style.
+Format with clear sections but feel free to be creative with the content.`;
 
     try {
-        const result = await model.generateContent(followUpPrompt);
-        const answer = result.response.text();
+        const result = await model.generateContent({
+            contents: [{ role: 'user', parts: [{ text: followUpPrompt }]}],
+            generationConfig: {
+                temperature: 0.9,
+                topK: 40,
+                topP: 0.9,
+                maxOutputTokens: 2048,
+            }
+        });
+
+        const answer = result.response.text()
+            .trim()
+            .replace(/\*\*/g, '')
+            .replace(/\*/g, '')
+            .replace(/#{2}\s/g, '<h2>')
+            .replace(/\n(?=<h2>)/g, '</h2>\n')
+            .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>');
 
         if (!answer || answer.trim().length === 0) {
             throw new Error("Failed to generate a valid response");
