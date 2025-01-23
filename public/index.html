@@ -3,112 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Personality Analysis - Discover Your Traits</title>
-    <meta name="description" content="Analyze your personality traits with our AI-powered analysis tool. Get insights and follow-up questions to deepen your understanding.">
-    <meta name="keywords" content="AI, personality analysis, personality traits, analysis tool, follow-up questions">
-    <meta property="og:title" content="AI Personality Analysis">
-    <meta property="og:description" content="Discover your personality traits with our AI analysis tool.">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>AI Personality Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/static/css/styles.css" rel="stylesheet">
 </head>
-<body>
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-8">
-                <h1 class="text-center mb-4 gradient-title">AI Personality Analysis</h1>
-                <div id="initialization-status" class="text-center mb-4 d-none">
-                    <div class="alert alert-info">
-                        Initializing application...
-                    </div>
-                </div>
+<body class="theme-container">
+    <div class="theme-container">
+        <div class="container py-5">
+            <!-- Header Section -->
+            <header class="text-center mb-5">
+                <h1 class="main-title">AI Personality Analysis</h1>
+                <p class="subtitle">Discover Your True Nature Through Different Lenses</p>
+            </header>
 
-                <!-- Prompt Type Selection -->
-                <div id="prompt-selection" class="card mb-4 shadow-sm">
+            <!-- Prompt Type Selection -->
+            <div id="prompt-selection" class="card theme-card mb-4">
+                <div class="card-body p-4">
+                    <h5 class="card-title theme-title mb-3">Choose Your Analysis Type</h5>
+                    <select class="form-select theme-select mb-3" id="prompt-type">
+                        <option value="">Select an analysis type...</option>
+                    </select>
+                    <div id="theme-description" class="theme-description mb-3">
+                        Select an analysis type to begin your journey.
+                    </div>
+                    <div id="custom-prompt-container" class="d-none">
+                        <textarea id="custom-prompt" class="form-control theme-textarea mb-3" rows="3" 
+                            placeholder="Enter your custom scenario prompt..."></textarea>
+                    </div>
+                    <button class="btn theme-button w-100" id="start-analysis" disabled>Start Analysis</button>
+                </div>
+            </div>
+
+            <!-- Question Container -->
+            <div id="question-container" class="card theme-card d-none">
+                <div class="card-body p-4">
+                    <div class="theme-progress mb-4">
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="progress-text">Question 1 of 10</small>
+                    </div>
+                    <h2 class="question-text theme-question mb-4"></h2>
+                    <div class="question-options"></div>
+                    <div class="mt-4 d-flex justify-content-between">
+                        <button class="btn theme-button-secondary" id="prev-question" disabled>Previous</button>
+                        <button class="btn theme-button" id="next-question">Next</button>
+                    </div>
+                    <button class="btn theme-button-exit position-absolute top-0 end-0 m-3" id="exit-button">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Analysis Container -->
+            <div id="analysis-container" class="d-none">
+                <div class="card theme-card mb-4">
                     <div class="card-body p-4">
-                        <h5 class="card-title mb-3">Choose Your Analysis Type</h5>
-                        <select class="form-select mb-3" id="prompt-type">
-                            <option value="">Select an analysis type...</option>
-                        </select>
-                        <div id="custom-prompt-container" class="d-none">
-                            <textarea id="custom-prompt" class="form-control mb-3" rows="3" 
-                                placeholder="Enter your custom scenario prompt... for instance what pokemon are you? or which power ranger color are you?"></textarea>
-                        </div>
-                        <button class="btn btn-primary w-100" id="start-analysis" disabled>Start Analysis</button>
+                        <h2 class="theme-title mb-4">Your Analysis</h2>
+                        <div id="analysis-text" class="theme-analysis"></div>
+                        <button class="btn theme-button-exit position-absolute top-0 end-0 m-3" id="exit-button-analysis">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Questions Section -->
-                <div id="question-container" class="d-none">
-                    <div class="card mb-4">
-                        <div class="card-body">
-                            <h5 class="card-title question-text"></h5>
-                            <div class="question-options d-flex flex-column gap-2">
-                                <!-- Options will be added dynamically -->
-                            </div>
-                            <div class="mt-4 d-flex justify-content-between align-items-center">
-                                <button class="btn btn-secondary" id="prev-question" disabled>Previous</button>
-                                <button class="btn btn-danger" id="exit-button">Exit</button>
-                                <button class="btn btn-primary" id="next-question">Next</button>
-                            </div>
-                        </div>
+                <!-- Follow-up Section -->
+                <div id="follow-up-section" class="card theme-card">
+                    <div class="card-body p-4">
+                        <h6 class="theme-title mb-3">Ask a Follow-up Question</h6>
+                        <p class="theme-text mb-3">Remaining questions: <span id="remaining-interactions">3</span></p>
+                        <textarea id="follow-up-input" class="form-control theme-textarea mb-3" rows="2"></textarea>
+                        <button class="btn theme-button w-100" id="submit-follow-up">Submit Question</button>
                     </div>
                 </div>
+            </div>
 
-                <!-- Analysis Results -->
-                <div id="analysis-container" class="card d-none">
-                    <div class="card-body">
-                        <h5 class="card-title">Your Analysis</h5>
-                        <div id="analysis-text" class="mb-4"></div>
-                        
-                        <!-- Follow-up Section -->
-                        <div id="follow-up-section" class="mb-4">
-                            <h6>Follow-up Questions (Remaining: <span id="remaining-interactions">3</span>)</h6>
-                            <textarea id="follow-up-input" class="form-control mb-3" 
-                                placeholder="Ask a follow-up question about your analysis..."></textarea>
-                            <button id="submit-follow-up" class="btn btn-primary w-100 mb-3">Ask Question</button>
-                        </div>
+            <!-- Loading Spinner -->
+            <div id="loading-container" class="loading-content d-none">
+                <div class="theme-spinner"></div>
+                <p class="loading-text">Analyzing your responses...</p>
+            </div>
 
-                        <div class="d-flex gap-2 mt-3">
-                            <button id="restart-btn" class="btn btn-secondary flex-grow-1">Start New Analysis</button>
-                            <button id="exit-button-analysis" class="btn btn-danger">Exit</button>
-                        </div>
+            <!-- How to Use Section -->
+            <div id="how-to-use" class="card theme-card mb-5">
+                <div class="card-body p-4">
+                    <h2 class="theme-title text-center mb-4">How to Use This Site</h2>
+                    <div class="theme-instructions">
+                        <p class="theme-text">Welcome to the AI Personality Analysis tool! Follow these simple steps:</p>
+                        <ol class="theme-list">
+                            <li>Choose your desired analysis type from the dropdown menu</li>
+                            <li>For custom analysis, enter your specific scenario</li>
+                            <li>Answer the questions thoughtfully - they shape your results</li>
+                            <li>Review your detailed analysis</li>
+                            <li>Ask follow-up questions to explore deeper insights</li>
+                        </ol>
                     </div>
-                </div>
-
-                <!-- Loading Spinner -->
-                <div id="loading-container" class="loading-overlay position-fixed top-0 start-0 w-100 h-100 d-none">
-                    <div class="loading-content p-4 rounded-3 shadow-lg text-center">
-                        <div class="spinner-border text-primary mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <div class="loading-text">Processing your request...</div>
-                    </div>
-                </div>
-
-                <!-- How to Use Section -->
-                <div id="how-to-use" class="mb-5">
-                    <h2 class="text-center mb-4">How to Use This Site</h2>
-                    <p>Welcome to the AI Personality Analysis tool! Follow these simple steps to get started:</p>
-                    <ol>
-                        <li>Select your desired analysis type from the dropdown menu.</li>
-                        <li>If you choose "Custom," enter your specific scenario in the provided text area.</li>
-                        <li>Click the "Start Analysis" button to begin.</li>
-                        <li>Answer the questions presented to you. You can select options or type your responses.</li>
-                        <li>Use the "Next" button to navigate through the questions, and the "Back" button to review your answers.</li>
-                        <li>Once you reach the last question, click "Submit" to receive your analysis.</li>
-                        <li>You can ask follow-up questions based on your analysis results.</li>
-                        <li>If you wish to start a new analysis, click the "Start New Analysis" button.</li>
-                    </ol>
-                    <p>If you have any questions or need assistance, feel free to reach out!</p>
-                </div>
-
-                <!-- Update the options buttons -->
-                <div class="question-options d-flex flex-column gap-2">
-                    <!-- Options will be added by JavaScript -->
                 </div>
             </div>
         </div>
     </div>
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
     <script src="/static/js/app.js"></script>
 </body>
 </html> 

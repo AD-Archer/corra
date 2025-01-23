@@ -47,7 +47,7 @@ A web application that generates personalized quizzes and analyses using Google'
 
 ## Environment Variables
 
-GOOGLE_API_KEY: Your Google Gemini Pro API key (required)
+GOOGLE_API_KEY: Your Google Gemini API key (required)
 
 ## API Endpoints
 

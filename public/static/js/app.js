@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupEventListeners() {
         // Handle prompt type selection
         promptTypeSelect.addEventListener('change', (e) => {
+            updateTheme(e.target.value);
             const isCustom = e.target.value === 'CUSTOM';
             customPromptContainer.classList.toggle('d-none', !isCustom);
             updateStartButton();
@@ -169,6 +170,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function displayCurrentQuestion() {
         if (!questions[currentQuestionIndex]) return;
 
+        // Update progress bar and text
+        const progressBar = document.querySelector('.progress-bar');
+        const progressText = document.querySelector('.progress-text');
+        const progressPercentage = ((currentQuestionIndex + 1) / questions.length) * 100;
+        
+        progressBar.style.width = `${progressPercentage}%`;
+        progressText.textContent = `Question ${currentQuestionIndex + 1} of ${questions.length}`;
+
         const questionText = document.querySelector('.question-text');
         const optionsContainer = document.querySelector('.question-options');
         
@@ -233,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         textarea.oninput = (e) => {
             const sanitizedValue = sanitizeInput(e.target.value);
             answers[currentQuestionIndex] = sanitizedValue;
-            e.target.value = sanitizedValue;
         };
     }
 
@@ -510,4 +518,8 @@ if (startAnalysisBtn) {
             setLoading(false);
         }
     });
+}
+
+function updateTheme(promptType) {
+    document.querySelector('.theme-container').dataset.theme = promptType;
 }
