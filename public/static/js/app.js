@@ -112,6 +112,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitFollowUp) {
             submitFollowUp.addEventListener('click', handleFollowUpSubmission);
         }
+
+        // Add exit button handlers
+        const exitButton = document.getElementById('exit-button');
+        const exitButtonAnalysis = document.getElementById('exit-button-analysis');
+
+        if (exitButton) {
+            exitButton.addEventListener('click', handleExit);
+        }
+
+        if (exitButtonAnalysis) {
+            exitButtonAnalysis.addEventListener('click', handleExit);
+        }
     }
 
     function updateStartButton() {
@@ -356,6 +368,12 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('Failed to get follow-up response. Please try again.');
         } finally {
             setLoading(false);
+        }
+    }
+
+    function handleExit() {
+        if (confirm('Are you sure you want to exit? All progress will be lost.')) {
+            window.location.reload();
         }
     }
 

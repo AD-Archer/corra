@@ -465,4 +465,23 @@ body {
 #how-to-use li {
     margin-bottom: 0.5rem;
     line-height: 1.6;
+}
+
+.btn-danger {
+    background-color: var(--error) !important;
+    border: none !important;
+    border-radius: 1rem !important;
+    padding: 0.75rem 1.5rem !important;
+    font-size: 1rem;
+    color: var(--text) !important;
+    transition: opacity 0.2s ease;
+}
+
+.btn-danger:hover {
+    opacity: 0.9;
+}
+
+/* Update the navigation buttons container */
+.mt-4.d-flex {
+    gap: 1rem;
 } 
