@@ -1,5 +1,6 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import rateLimit from 'express-rate-limit';
 dotenv.config();
 
 if (!process.env.GOOGLE_API_KEY) {
@@ -9,6 +10,19 @@ if (!process.env.GOOGLE_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY);
 const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+// Add rate limiter configuration
+export const followUpLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour window
+    max: 20, // limit each IP to 10 requests per windowMs
+    message: {
+        error: 'Too many follow-up questions. Please try again later.',
+        remainingInteractions: 0,
+        success: false
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+});
 
 // Add better error handling for API calls
 async function safeApiCall(apiFunction) {
@@ -162,29 +176,31 @@ function checkQuestionDiversity(questions) {
 export async function generateAnalysis(prompt, answers, interactionCount) {
     const maxAttempts = 3;
     let attempts = 0;
+    let lastError = null;
 
     while (attempts < maxAttempts) {
         try {
             const analysisPrompt = `${prompt}
 
-Based on these answers, create a detailed analysis. Use single line breaks and proper HTML formatting:
+Based on these answers, create a detailed analysis using this exact HTML structure:
 
 <h2>Core Traits</h2>
-<p>Detailed description of their core personality traits.</p>
+<p>Detailed description of core traits.</p>
 
 <h2>Decision-Making Style</h2>
-<p>Analysis of how they approach challenges and make decisions.</p>
+<p>Analysis of decision-making approach.</p>
 
 <h2>Key Strengths</h2>
-<p>Description of their unique abilities and qualities.</p>
+<p>Description of key strengths and abilities.</p>
 
 <h2>Growth Areas</h2>
-<p>Constructive suggestions for personal development.</p>
+<p>Suggestions for development.</p>
 
-For themed analyses (Bleach, etc.), include:
+${prompt.includes('Avatar') ? `<h2>Bending Style</h2>
+<p>Description of bending style and connection to personality.</p>` : ''}
 
-<h2>Shikai</h2>
-<p>Name: [Name]</p>
+${prompt.includes('Bleach') ? `<h2>Shikai</h2>
+<p>Name: [Zanpakuto name]</p>
 <p>Appearance: [Description]</p>
 <p>Abilities:</p>
 <ul>
@@ -194,16 +210,25 @@ For themed analyses (Bleach, etc.), include:
 </ul>
 
 <h2>Bankai</h2>
-<p>Name: [Name]</p>
+<p>Name: [Bankai name]</p>
 <p>Appearance: [Description]</p>
 <p>Abilities:</p>
 <ul>
 <li>[First ability]</li>
 <li>[Second ability]</li>
 <li>[Third ability]</li>
-</ul>
+</ul>` : ''}
 
-Use single line breaks between sections and maintain HTML structure.`;
+Important:
+- Use proper HTML tags (<h2>, <p>, <ul>, <li>)
+- Keep formatting consistent
+- No markdown formatting
+- No empty paragraphs`;
+
+            // Add delay between retries
+            if (attempts > 0) {
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
 
             const result = await model.generateContent({
                 contents: [{ role: 'user', parts: [{ text: analysisPrompt }]}],
@@ -215,29 +240,27 @@ Use single line breaks between sections and maintain HTML structure.`;
                 }
             });
 
-            if (!result || !result.response) {
+            if (!result?.response?.text) {
                 throw new Error('Empty response received');
             }
 
             const analysis = result.response.text().trim();
             
-            // Format the analysis to ensure proper spacing
+            // Validate HTML structure
+            if (!analysis.includes('<h2>') || !analysis.includes('</h2>')) {
+                throw new Error('Invalid HTML structure');
+            }
+
+            // Clean up the formatting
             const formattedAnalysis = analysis
-                .replace(/\n{2,}/g, '\n')   // Replace multiple line breaks with single
-                .replace(/\s+/g, ' ')       // Replace multiple spaces with single
-                .replace(/<\/h2>\s*/g, '</h2>')  // Remove space after headers
-                .replace(/<\/p>\s*/g, '</p>')    // Remove space after paragraphs
-                .replace(/<\/ul>\s*/g, '</ul>')  // Remove space after lists
+                .replace(/\n{2,}/g, '\n')
+                .replace(/\s+/g, ' ')
+                .replace(/>\s+</g, '><')
                 .replace(/\*\*/g, '')
                 .replace(/\*/g, '')
+                .replace(/#{1,6}\s/g, '')
+                .replace(/<p>\s*<\/p>/g, '')
                 .trim();
-
-            // Validate content
-            if (!formattedAnalysis || formattedAnalysis.length < 100) {
-                console.log(`Attempt ${attempts + 1}: Analysis too short`);
-                attempts++;
-                continue;
-            }
 
             return {
                 analysis: formattedAnalysis,
@@ -247,33 +270,44 @@ Use single line breaks between sections and maintain HTML structure.`;
 
         } catch (error) {
             console.error(`Analysis attempt ${attempts + 1} failed:`, error);
-            if (attempts >= maxAttempts - 1) {
-                throw new Error('Failed to generate analysis. Please try again.');
-            }
+            lastError = error;
             attempts++;
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // If it's the last attempt, throw a user-friendly error
+            if (attempts >= maxAttempts) {
+                if (lastError.message.includes('Internal Server Error')) {
+                    throw new Error('Service is temporarily unavailable. Please try again in a moment.');
+                }
+                throw new Error('Unable to generate analysis. Please try again.');
+            }
         }
     }
-
-    throw new Error('Unable to generate a valid analysis. Please try again.');
 }
 
 export async function generateFollowUp(previousAnalysis, question, interactionCount) {
+    // Add interaction count check
+    if (interactionCount >= 3) {
+        throw new Error('Maximum follow-up questions reached for this analysis.');
+    }
+
     const followUpPrompt = `Previous Analysis:
 ${previousAnalysis}
 
-Create an engaging and imaginative response to this follow-up question:
+Create an engaging response to this follow-up question:
 ${question}
 
-Feel free to:
-- Use creative analogies and examples
-- Reference specific elements from the analysis theme
-- Add relevant details and connections
-- Be descriptive and entertaining
-- Include theme-specific terminology
+Format your response using proper HTML:
+<h2>Response</h2>
+<p>[Your detailed response here]</p>
 
-Keep your response focused on the question while maintaining the fun and engaging style.
-Format with clear sections but feel free to be creative with the content.`;
+Guidelines:
+- Use theme-specific terminology
+- Reference the previous analysis
+- Be creative and descriptive
+- Keep formatting clean and simple
+- Use single <h2> tag for section header
+- Wrap text in <p> tags
+- No empty paragraphs or extra spacing`;
 
     try {
         const result = await model.generateContent({
@@ -286,21 +320,30 @@ Format with clear sections but feel free to be creative with the content.`;
             }
         });
 
-        const answer = result.response.text()
-            .trim()
+        if (!result || !result.response) {
+            throw new Error('Empty response received');
+        }
+
+        const response = result.response.text().trim();
+        
+        // Format the response
+        const formattedResponse = response
+            .replace(/\n{2,}/g, '\n')   // Replace multiple line breaks with single
+            .replace(/\s+/g, ' ')       // Replace multiple spaces with single
+            .replace(/<\/h2>\s*/g, '</h2>')  // Remove space after headers
+            .replace(/<\/p>\s*/g, '</p>')    // Remove space after paragraphs
             .replace(/\*\*/g, '')
             .replace(/\*/g, '')
-            .replace(/#{2}\s/g, '<h2>')
-            .replace(/\n(?=<h2>)/g, '</h2>\n')
-            .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>');
+            .replace(/<p>\s*<\/p>/g, '')  // Remove empty paragraphs
+            .trim();
 
-        if (!answer || answer.trim().length === 0) {
-            throw new Error("Failed to generate a valid response");
+        if (!formattedResponse || formattedResponse.length < 50) {
+            throw new Error('Response too short');
         }
 
         return {
-            answer,
-            remainingInteractions: 3 - interactionCount,
+            answer: formattedResponse,
+            remainingInteractions: Math.max(0, 3 - interactionCount),
             success: true
         };
     } catch (error) {

@@ -358,35 +358,38 @@ body {
     color: var(--text) !important;
     padding: 1.5rem;
     border-radius: 1rem;
-    white-space: pre-line;
-    line-height: 1.4;
+    line-height: 1.5;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-    margin-bottom: 2rem;
 }
 
 #analysis-text h2 {
     color: var(--primary);
     font-size: 1.4rem;
-    margin-top: 1rem;
-    margin-bottom: 0.25rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
     font-weight: 600;
     border-bottom: 1px solid var(--primary);
     padding-bottom: 0.25rem;
 }
 
+#analysis-text h2:first-child {
+    margin-top: 0;
+}
+
 #analysis-text p {
-    margin: 0;
-    line-height: 1.4;
+    margin: 0.75rem 0;
+    line-height: 1.6;
 }
 
 #analysis-text ul {
-    margin: 0;
-    padding-left: 1rem;
+    margin: 0.75rem 0;
+    padding-left: 1.5rem;
+    list-style-type: disc;
 }
 
 #analysis-text li {
-    margin: 0;
-    line-height: 1.4;
+    margin: 0.5rem 0;
+    line-height: 1.5;
 }
 
 /* Special styling for Shikai/Bankai sections */

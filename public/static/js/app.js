@@ -341,14 +341,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to get follow-up response');
-            }
-
             const result = await response.json();
+
+            if (!response.ok) {
+                if (response.status === 429) {
+                    alert('Rate limit exceeded. Please try again later.');
+                    followUpInput.disabled = true;
+                    submitFollowUp.disabled = true;
+                    return;
+                }
+                throw new Error(result.error || 'Failed to get follow-up response');
+            }
             
             // Update the analysis text with the follow-up response
-            analysisText.textContent += '\n\nFollow-up Question:\n' + question + '\n\nResponse:\n' + result.answer;
+            analysisText.innerHTML += `<h2>Follow-up Question</h2><p>${question}</p>${result.answer}`;
             
             // Update remaining interactions
             interactionCount++;
@@ -365,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error('Error submitting follow-up:', error);
-            alert('Failed to get follow-up response. Please try again.');
+            alert(error.message || 'Failed to get follow-up response. Please try again.');
         } finally {
             setLoading(false);
         }

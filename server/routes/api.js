@@ -3,6 +3,7 @@ import { PROMPT_TYPES } from '../config/promptTypes.js';
 import { getQuestions } from '../controllers/questionController.js';
 import { analyzeAnswers } from '../controllers/analysisController.js';
 import { handleFollowUp } from '../controllers/followUpController.js';
+import { followUpLimiter } from '../services/aiService.js';
 
 const router = express.Router();
 
@@ -17,6 +18,6 @@ router.get('/prompt-types', (req, res) => {
 
 router.get('/questions', getQuestions);
 router.post('/analyze', analyzeAnswers);
-router.post('/follow-up', handleFollowUp);
+router.post('/follow-up', followUpLimiter, handleFollowUp);
 
 export default router; 
