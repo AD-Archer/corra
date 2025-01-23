@@ -160,63 +160,102 @@ function checkQuestionDiversity(questions) {
 }
 
 export async function generateAnalysis(prompt, answers, interactionCount) {
-    try {
-        const analysisPrompt = `${prompt}
+    const maxAttempts = 3;
+    let attempts = 0;
 
-Based on the answers provided, create an engaging and imaginative analysis. Feel free to be creative while following this general structure:
+    while (attempts < maxAttempts) {
+        try {
+            const analysisPrompt = `${prompt}
 
+Based on these answers, create an engaging analysis:
+${answers.join("\n")}
+
+Create a personality analysis with these sections:
 <h2>Core Traits</h2>
-(Describe their key personality traits with specific examples and metaphors)
+(Key personality traits with examples)
 
 <h2>Decision-Making Style</h2>
-(Explain how they approach challenges and make choices, using relevant scenarios)
+(How they approach challenges)
 
 <h2>Key Strengths</h2>
-(Highlight their unique abilities and positive qualities, relating them to their chosen theme)
+(Their unique abilities and qualities)
 
 <h2>Growth Areas</h2>
-(Suggest potential areas for development in an encouraging way)
+(Potential areas for development)
 
-For themed analyses (like Power Rangers, Pokemon, Bleach, etc.), feel free to:
-- Use theme-specific terminology and references
-- Draw parallels between their traits and themed elements
-- Include relevant lore or background information
-- Add creative descriptions and explanations
-- Make connections to specific characters or elements from the theme
+For themed analyses (like Power Rangers, Pokemon, Bleach, etc.):
+- Use theme-specific terms and references
+- Connect traits to themed elements
+- Include relevant lore
+- Be creative and descriptive
+- Make specific character connections
 
-Make it engaging and fun while keeping the HTML formatting for readability.
-${answers.join("\n")}`;
+Keep HTML formatting but be creative with content.`;
 
-        const result = await model.generateContent({
-            contents: [{ role: 'user', parts: [{ text: analysisPrompt }]}],
-            generationConfig: {
-                temperature: 0.9,  // Increased for more creativity
-                topK: 40,
-                topP: 0.9,
-                maxOutputTokens: 2048,
+            const result = await model.generateContent({
+                contents: [{ role: 'user', parts: [{ text: analysisPrompt }]}],
+                generationConfig: {
+                    temperature: 0.9,
+                    topK: 40,
+                    topP: 0.9,
+                    maxOutputTokens: 2048,
+                }
+            });
+
+            if (!result || !result.response) {
+                throw new Error('Empty response received');
             }
-        });
 
-        const analysis = result.response.text()
-            .trim()
-            .replace(/\*\*/g, '')
-            .replace(/\*/g, '')
-            .replace(/#{2}\s/g, '<h2>')
-            .replace(/\n(?=<h2>)/g, '</h2>\n')
-            .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>');
-        
-        return {
-            analysis,
-            remainingInteractions: 3 - interactionCount,
-            success: true
-        };
-    } catch (error) {
-        console.error("Error generating analysis:", error);
-        if (error.message.includes('Internal Server Error')) {
-            throw new Error('Service temporarily unavailable. Please try again.');
+            const analysis = result.response.text().trim();
+            
+            // Validate the analysis has minimum required content
+            if (!analysis || analysis.length < 100) {
+                console.log(`Attempt ${attempts + 1}: Analysis too short`);
+                attempts++;
+                continue;
+            }
+
+            // Check for required sections
+            if (!analysis.includes('<h2>Core Traits</h2>') || 
+                !analysis.includes('<h2>Decision-Making Style</h2>') ||
+                !analysis.includes('<h2>Key Strengths</h2>') ||
+                !analysis.includes('<h2>Growth Areas</h2>')) {
+                console.log(`Attempt ${attempts + 1}: Missing required sections`);
+                attempts++;
+                continue;
+            }
+
+            // Format the analysis
+            const formattedAnalysis = analysis
+                .replace(/\*\*/g, '')
+                .replace(/\*/g, '')
+                .replace(/#{2}\s/g, '<h2>')
+                .replace(/\n(?=<h2>)/g, '</h2>\n')
+                .replace(/^(?!<h2>|-)(.*?)$/gm, '<p>$1</p>');
+
+            return {
+                analysis: formattedAnalysis,
+                remainingInteractions: 3 - interactionCount,
+                success: true
+            };
+
+        } catch (error) {
+            console.error(`Analysis attempt ${attempts + 1} failed:`, error);
+            
+            if (attempts >= maxAttempts - 1) {
+                if (error.message.includes('Internal Server Error')) {
+                    throw new Error('Service temporarily unavailable. Please wait a moment and try again.');
+                }
+                throw new Error('Failed to generate analysis after multiple attempts. Please try again.');
+            }
+            
+            // Add a small delay before retrying
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            attempts++;
         }
-        throw new Error("Failed to generate analysis. Please try again.");
     }
+
+    throw new Error('Unable to generate a valid analysis. Please try again.');
 }
 
 export async function generateFollowUp(previousAnalysis, question, interactionCount) {
