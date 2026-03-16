@@ -9,12 +9,12 @@
     "dev": "nodemon -r dotenv/config server.js"
   },
   "dependencies": {
-    "@google/generative-ai": "^0.2.0",
-    "dotenv": "^16.4.7",
-    "express": "^4.18.2",
-    "express-rate-limit": "^7.5.0"
+    "@google/generative-ai": "^0.2.1",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.1",
+    "express-rate-limit": "^7.5.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9"
+    "nodemon": "^3.1.14"
   }
 }
